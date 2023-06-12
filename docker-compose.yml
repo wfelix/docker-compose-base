@@ -1,0 +1,59 @@
+version: "3"
+name: "conecto"
+services:
+  basic-api:
+    container_name: basic-api
+    restart: always
+    build:
+      context: ${DOCKER_FILE_API_DIR}
+      dockerfile: Dockerfile
+    ports:
+      - "${API_HOST_HTTP_PORT:-80}:80"
+    volumes:
+      - ${APPLICATION_API}:/usr/share/nginx
+      - ${NGINX_API_HOST_LOG_PATH}:/var/log/nginx
+      - ${NGINX_API_SITES_PATH}:/etc/nginx/conf.d
+      - ${DOCKER_SUPERVISOR_DIR}:/etc/supervisor/conf.d
+    networks:
+      - basic_net
+  basic-db:
+    container_name: "basic-db"
+    restart: always
+    image: mysql:8.0.25
+    environment:
+      TZ: America/Sao_Paulo
+      MYSQL_ROOT_PASSWORD: ${DBDATA_MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${DBDATA_MYSQL_USER}
+      MYSQL_PASSWORD: ${DBDATA_MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${DBDATA_MYSQL_DATABASE}
+    ports:
+      - "${DBDATA_MYSQL_PORT}:3306"
+    volumes:
+      - ${DBDATA_MYSQL}:/var/lib/mysql
+      - ${DBDATA_MYSQL_LOG}:/var/log/mysql
+    networks:
+      - basic_net
+  basic-adminer:
+    container_name: "basic-adminer"
+    restart: always
+    image: adminer
+    ports:
+      - ${ADMINER_HOST_HTTP_PORT}:8080
+    volumes:
+      - ${ADMINER_DIR}:/home/conectopay
+    depends_on:
+      - basic-db
+    networks:
+      - basic_net
+  basic-redis:
+    container_name: "basic-redis"
+    restart: always
+    image: redis:5.0.7
+    ports:
+      - ${REDIS_HOST_HTTP_PORT}:6379
+    networks:
+      - basic_net
+
+networks:
+  basic_net:
+    driver: bridge

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+procs=$(cat /proc/cpuinfo | grep processor | wc -l)
+sed -i -e "s/worker_processes  1/worker_processes $procs/" /etc/nginx/nginx.conf
+
+if [ ! -z "$WWWUSER" ]; then
+    usermod -u $WWWUSER sail
+fi
+
+if [ ! -d /.composer ]; then
+    mkdir /.composer
+fi
+
+chmod -R ugo+rw /.composer
+
+chown -Rf nginx.nginx /usr/share/nginx/
+
+/usr/bin/supervisord -n -c /etc/supervisord.conf
+
+
